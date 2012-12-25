@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<project name="httpclient" default="dist">
+	<property name="root" value="." />
+
+	<property name='dist_jar' value='httpclient.jar' />
+	<property name="classes" value="${root}/build" />
+	<property name="distroot" value="${root}/dist" />
+	<property name="docdir" value="${root}/doc" />
+	<property name="lib" value="${root}/lib" />
+	<property name="srcroot" value="${root}/src" />
+	<property name="testroot" value="${root}/test" />
+	<property name="version" value="0.1.0" />
+	<property name="release" value="release" />
+	<property name="project_name" value="httpclient" />
+
+	<target name="prepare">
+	    <mkdir dir="${classes}"/>
+	    <mkdir dir="${distroot}"/>
+	</target>
+	
+	<target name="compile" depends="prepare">
+	    <javac debug="on" target="1.5" source="1.5" srcdir="${srcroot}" destdir="${classes}">
+	        <classpath>
+				<fileset dir="${lib}">
+					<include name="*.jar" />
+				</fileset>
+			</classpath>
+	    </javac>
+	</target>
+	
+    <target name="dist" depends="compile">
+    	<copy todir="${classes}">
+	    	<fileset dir="${srcroot}" />
+    	</copy>
+	    <jar destfile="${distroot}/${dist_jar}" basedir="${classes}"/>
+	    <delete dir="${classes}"/>
+	</target>
+	
+</project>
