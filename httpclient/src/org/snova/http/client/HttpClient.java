@@ -129,7 +129,8 @@ public class HttpClient
 		{
 			future.channel().pipeline().addLast("codec", new HttpClientCodec());
 		}
-		if (isHttps)
+		if (isHttps
+		        && null == future.channel().pipeline().get(SslHandler.class))
 		{
 			SSLContext sslContext;
 			try
@@ -183,6 +184,10 @@ public class HttpClient
 			if (null != proxy)
 			{
 				remote = proxy.getHost();
+				if(proxy.getPort() != 0)
+				{
+					remote = proxy.getHost() + ":" + proxy.getPort();
+				}
 			}
 		}
 		SimpleSocketAddress address = HttpClientHelper.getHttpRemoteAddress(
@@ -191,19 +196,12 @@ public class HttpClient
 		if (null == handler)
 		{
 			handler = new HttpClientHandler(this, address.toString());
-			handler.setCallback(cb);
 			handler.setRequest(req);
 			ChannelFuture f = options.connector.connect(address.host,
 			        address.port);
 			prepareHandler(isHttps, f, handler);
 		}
-		else
-		{
-			if (logger.isDebugEnabled())
-			{
-				logger.debug("Reuse keepalived connection");
-			}
-		}
+		handler.setCallback(cb);
 		String url = req.getUri();
 		if (proxy != null)
 		{
@@ -216,7 +214,7 @@ public class HttpClient
 			}
 			if (url.indexOf("://") == -1)
 			{
-				req.setUri("http://" + req.getHeader("Host"));
+				req.setUri("http://" + req.getHeader("Host") + url);
 			}
 		}
 		else
@@ -234,6 +232,7 @@ public class HttpClient
 				}
 			}
 		}
+		System.out.println("####" + req.getUri());
 		handler.channelFuture.addListener(new ChannelFutureListener()
 		{
 			@Override

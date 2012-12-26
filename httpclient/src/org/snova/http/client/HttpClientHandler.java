@@ -21,7 +21,6 @@ public class HttpClientHandler extends
 {
 	private HttpClient client;
 	private HttpClientCallback callback;
-	private HttpRequest request;
 
 	private boolean inPool;
 	private boolean keepalive = true;
@@ -48,7 +47,6 @@ public class HttpClientHandler extends
 
 	void setRequest(HttpRequest request)
 	{
-		this.request = request;
 		keepalive = HttpHeaders.isKeepAlive(request);
 	}
 
@@ -117,6 +115,7 @@ public class HttpClientHandler extends
 					{
 						inPool = client.putIdleConnection(remote, this);
 					}
+
 				}
 			}
 			callback.onResponse(response);
@@ -128,13 +127,11 @@ public class HttpClientHandler extends
 			if (chunk.isLast())
 			{
 				readingChunks = false;
-				System.out.println("############Keepalive=" + keepalive);
 				if (keepalive)
 				{
 					inPool = client.putIdleConnection(remote, this);
 				}
 			}
-
 		}
 	}
 
