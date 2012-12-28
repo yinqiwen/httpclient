@@ -184,11 +184,13 @@ public class HttpClient
 			if (null != proxy)
 			{
 				remote = proxy.getHost();
-				if(proxy.getPort() != 0)
+				if(proxy.getPort() > 0)
 				{
 					remote = proxy.getHost() + ":" + proxy.getPort();
 				}
+				isHttps = proxy.getProtocol().equalsIgnoreCase("https");
 			}
+			
 		}
 		SimpleSocketAddress address = HttpClientHelper.getHttpRemoteAddress(
 		        isHttps, remote);
