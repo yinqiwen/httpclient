@@ -39,6 +39,13 @@ public class HttpClientTest
 				        + chunk.getContent().readableBytes());
 
 			}
+
+			@Override
+            public void onResponseComplete()
+            {
+				System.out.println("####onResponseComplete");
+	            
+            }
 		});
 		Thread.sleep(2000);
 		client.doGet("http://www.qq.com/path/asdf", new HttpClientCallback()
@@ -61,6 +68,12 @@ public class HttpClientTest
 				        + chunk.getContent().readableBytes());
 
 			}
+			@Override
+            public void onResponseComplete()
+            {
+				System.out.println("####onResponseComplete");
+	            
+            }
 		});
 
 		Thread.sleep(2000);

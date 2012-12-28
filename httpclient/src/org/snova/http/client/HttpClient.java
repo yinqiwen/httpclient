@@ -79,7 +79,7 @@ public class HttpClient
 				return true;
 			}
 		}
-		handler.close();
+		handler.closeChannel();
 		return false;
 	}
 
@@ -90,7 +90,7 @@ public class HttpClient
 			LinkedList<HttpClientHandler> list = getIdleConnList(address);
 			list.remove(handler);
 		}
-		handler.close();
+		handler.closeChannel();
 	}
 
 	private LinkedList<HttpClientHandler> getIdleConnList(String address)
@@ -232,7 +232,6 @@ public class HttpClient
 				}
 			}
 		}
-		System.out.println("####" + req.getUri());
 		handler.channelFuture.addListener(new ChannelFutureListener()
 		{
 			@Override

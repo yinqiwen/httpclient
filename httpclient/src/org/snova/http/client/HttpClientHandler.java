@@ -79,7 +79,7 @@ public class HttpClientHandler extends
 		return true;
 	}
 
-	void close()
+	public void closeChannel()
 	{
 		if (null != channelFuture)
 		{
@@ -93,6 +93,7 @@ public class HttpClientHandler extends
 	public void messageReceived(ChannelHandlerContext ctx, Object msg)
 	        throws Exception
 	{
+		boolean resComplete = false;
 		if (!readingChunks)
 		{
 			HttpResponse response = (HttpResponse) msg;
@@ -100,7 +101,6 @@ public class HttpClientHandler extends
 			{
 				keepalive = HttpHeaders.isKeepAlive(response);
 			}
-
 			if (response.getTransferEncoding().isMultiple())
 			{
 				readingChunks = true;
@@ -115,6 +115,7 @@ public class HttpClientHandler extends
 					{
 						inPool = client.putIdleConnection(remote, this);
 					}
+					resComplete = true;
 
 				}
 			}
@@ -131,7 +132,12 @@ public class HttpClientHandler extends
 				{
 					inPool = client.putIdleConnection(remote, this);
 				}
+				resComplete = true;
 			}
+		}
+		if (resComplete)
+		{
+			callback.onResponseComplete();
 		}
 	}
 
@@ -142,6 +148,10 @@ public class HttpClientHandler extends
 		if (inPool)
 		{
 			client.removeIdleConnection(remote, this);
+		}
+		if(readingChunks)
+		{
+			//callback.onResponseComplete();
 		}
 	}
 
