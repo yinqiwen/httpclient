@@ -24,6 +24,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -39,18 +41,19 @@ import org.snova.http.client.impl.DefaultHttpConnector;
  */
 public class HttpClient
 {
-	private static Logger logger = LoggerFactory.getLogger(HttpClient.class);
-	private EventLoopGroup loop;
-
-	private Map<String, LinkedList<HttpClientHandler>> idleConns = new HashMap<String, LinkedList<HttpClientHandler>>();
-	private HttpClientOptions options;
-
-	public HttpClient(HttpClientOptions options)
+	private static Logger	                           logger	  = LoggerFactory
+	                                                                      .getLogger(HttpClient.class);
+	private EventLoopGroup	                           loop;
+	
+	private Map<String, LinkedList<HttpClientHandler>>	idleConns	= new HashMap<String, LinkedList<HttpClientHandler>>();
+	private Options	                                   options;
+	
+	public HttpClient(Options options)
 	{
 		this(options, null);
 	}
-
-	public HttpClient(HttpClientOptions options, EventLoopGroup loop)
+	
+	public HttpClient(Options options, EventLoopGroup loop)
 	{
 		this.loop = loop;
 		this.options = options;
@@ -60,14 +63,14 @@ public class HttpClient
 		}
 		if (null == this.options)
 		{
-			this.options = new HttpClientOptions();
+			this.options = new Options();
 		}
 		if (this.options.connector == null)
 		{
 			this.options.connector = new DefaultHttpConnector(this.loop);
 		}
 	}
-
+	
 	boolean putIdleConnection(String address, HttpClientHandler handler)
 	{
 		synchronized (idleConns)
@@ -82,7 +85,7 @@ public class HttpClient
 		handler.closeChannel();
 		return false;
 	}
-
+	
 	void removeIdleConnection(String address, HttpClientHandler handler)
 	{
 		synchronized (idleConns)
@@ -92,7 +95,7 @@ public class HttpClient
 		}
 		handler.closeChannel();
 	}
-
+	
 	private LinkedList<HttpClientHandler> getIdleConnList(String address)
 	{
 		synchronized (idleConns)
@@ -102,12 +105,12 @@ public class HttpClient
 			{
 				list = new LinkedList<HttpClientHandler>();
 				idleConns.put(address, list);
-
+				
 			}
 			return list;
 		}
 	}
-
+	
 	private HttpClientHandler getIdleConnection(String address)
 	{
 		synchronized (idleConns)
@@ -115,13 +118,13 @@ public class HttpClient
 			LinkedList<HttpClientHandler> list = getIdleConnList(address);
 			if (!list.isEmpty())
 			{
-
+				
 				return list.removeFirst();
 			}
 		}
 		return null;
 	}
-
+	
 	private void prepareHandler(boolean isHttps, ChannelFuture future,
 	        HttpClientHandler handler) throws HttpClientException
 	{
@@ -149,8 +152,8 @@ public class HttpClient
 		future.channel().pipeline().addLast("handler", handler);
 		handler.setChannelFuture(future);
 	}
-
-	public HttpClientHandler doGet(String url, HttpClientCallback cb)
+	
+	public HttpClientHandler doGet(String url, FutureCallback cb)
 	        throws HttpClientException
 	{
 		HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1,
@@ -165,11 +168,11 @@ public class HttpClient
 			throw new HttpClientException(e);
 		}
 		request.setHeader("Host", u.getHost());
-		return doRequest(request, cb);
+		return execute(request, cb);
 	}
-
-	public HttpClientHandler doRequest(final HttpRequest req,
-	        final HttpClientCallback cb) throws HttpClientException
+	
+	public HttpClientHandler execute(final HttpRequest req,
+	        final FutureCallback cb) throws HttpClientException
 	{
 		String remote = req.getHeader("Host");
 		if (null == remote)
@@ -184,7 +187,7 @@ public class HttpClient
 			if (null != proxy)
 			{
 				remote = proxy.getHost();
-				if(proxy.getPort() > 0)
+				if (proxy.getPort() > 0)
 				{
 					remote = proxy.getHost() + ":" + proxy.getPort();
 				}
@@ -252,5 +255,5 @@ public class HttpClient
 		});
 		return handler;
 	}
-
+	
 }

@@ -20,11 +20,13 @@ public class HttpClientHandler extends
         ChannelInboundMessageHandlerAdapter<Object>
 {
 	private HttpClient client;
-	private HttpClientCallback callback;
+	private FutureCallback callback;
 
 	private boolean inPool;
 	private boolean keepalive = true;
 	private boolean readingChunks;
+	private boolean answered;
+	private HttpResponse clientResponse;
 	ChannelFuture channelFuture;
 
 	void setChannelFuture(ChannelFuture channelFuture)
@@ -40,7 +42,7 @@ public class HttpClientHandler extends
 		this.remote = remote;
 	}
 
-	void setCallback(HttpClientCallback future)
+	void setCallback(FutureCallback future)
 	{
 		this.callback = future;
 	}
@@ -94,9 +96,14 @@ public class HttpClientHandler extends
 	        throws Exception
 	{
 		boolean resComplete = false;
+		answered = true;
+		FutureCallback cacheCB = this.callback;
+		HttpResponse cacheRes = clientResponse;
 		if (!readingChunks)
 		{
 			HttpResponse response = (HttpResponse) msg;
+			clientResponse = response;
+			cacheRes = clientResponse;
 			if (keepalive)
 			{
 				keepalive = HttpHeaders.isKeepAlive(response);
@@ -116,10 +123,9 @@ public class HttpClientHandler extends
 						inPool = client.putIdleConnection(remote, this);
 					}
 					resComplete = true;
-
 				}
 			}
-			callback.onResponse(response);
+			cacheCB.onResponse(response);
 		}
 		else
 		{
@@ -137,7 +143,7 @@ public class HttpClientHandler extends
 		}
 		if (resComplete)
 		{
-			callback.onResponseComplete();
+			cacheCB.onComplete(cacheRes);
 		}
 	}
 
@@ -149,8 +155,9 @@ public class HttpClientHandler extends
 		{
 			client.removeIdleConnection(remote, this);
 		}
-		if(readingChunks)
+		if(readingChunks || !answered)
 		{
+			callback.onError("Body not finished.");
 			//callback.onResponseComplete();
 		}
 	}
