@@ -47,20 +47,21 @@ import org.snova.http.client.impl.DefaultHttpConnector;
  */
 public class HttpClient
 {
-	private static Logger logger = LoggerFactory.getLogger(HttpClient.class);
-
-	private ClientBootstrap bootstrap;
-	private Map<String, LinkedList<HttpClientHandler>> idleConns = new HashMap<String, LinkedList<HttpClientHandler>>();
-	private Options options;
-
+	private static Logger	                           logger	  = LoggerFactory
+	                                                                      .getLogger(HttpClient.class);
+	
+	private ClientBootstrap	                           bootstrap;
+	private Map<String, LinkedList<HttpClientHandler>>	idleConns	= new HashMap<String, LinkedList<HttpClientHandler>>();
+	private Options	                                   options;
+	
 	public HttpClient(Options options)
 	{
 		this(options, null);
 	}
-
+	
 	public HttpClient(Options options, ClientBootstrap boot)
 	{
-
+		
 		this.options = options;
 		this.bootstrap = boot;
 		if (null == this.options)
@@ -78,7 +79,7 @@ public class HttpClient
 			this.options.connector = new DefaultHttpConnector(bootstrap);
 		}
 	}
-
+	
 	boolean putIdleConnection(String address, HttpClientHandler handler)
 	{
 		synchronized (idleConns)
@@ -93,7 +94,7 @@ public class HttpClient
 		handler.closeChannel();
 		return false;
 	}
-
+	
 	void removeIdleConnection(String address, HttpClientHandler handler)
 	{
 		synchronized (idleConns)
@@ -103,7 +104,7 @@ public class HttpClient
 		}
 		handler.closeChannel();
 	}
-
+	
 	private LinkedList<HttpClientHandler> getIdleConnList(String address)
 	{
 		synchronized (idleConns)
@@ -113,12 +114,12 @@ public class HttpClient
 			{
 				list = new LinkedList<HttpClientHandler>();
 				idleConns.put(address, list);
-
+				
 			}
 			return list;
 		}
 	}
-
+	
 	private HttpClientHandler getIdleConnection(String address)
 	{
 		synchronized (idleConns)
@@ -126,18 +127,18 @@ public class HttpClient
 			LinkedList<HttpClientHandler> list = getIdleConnList(address);
 			if (!list.isEmpty())
 			{
-
+				
 				return list.removeFirst();
 			}
 		}
 		return null;
 	}
-
+	
 	private void prepareHandler(boolean sslEnable, HttpClientHandler handler)
 	        throws HttpClientException
 	{
 		ChannelFuture future = handler.channelFuture;
-
+		
 		if (future.getChannel().getPipeline().get(HttpClientCodec.class) == null)
 		{
 			future.getChannel().getPipeline()
@@ -166,9 +167,9 @@ public class HttpClient
 		{
 			future.getChannel().getPipeline().addLast("handler", handler);
 		}
-
+		
 	}
-
+	
 	public HttpClientHandler doGet(String url, FutureCallback cb)
 	        throws HttpClientException
 	{
@@ -186,7 +187,7 @@ public class HttpClient
 		request.setHeader("Host", u.getHost());
 		return execute(request, cb);
 	}
-
+	
 	private String adjustProxyRequest(URL proxy, HttpRequest req)
 	{
 		String url = req.getUri();
@@ -201,7 +202,7 @@ public class HttpClient
 				pa = Base64.encode(buf).toString(Charset.forName("utf-8"));
 				proxyReq.setHeader("Proxy-Authorization", pa);
 			}
-
+			
 			if (url.indexOf("://") == -1
 			        && !req.getMethod().equals(HttpMethod.CONNECT))
 			{
@@ -225,9 +226,9 @@ public class HttpClient
 		}
 		return pa;
 	}
-
-	private void doRequest(HttpClientHandler handler, final HttpRequest req,
-	        final FutureCallback cb)
+	
+	private void doRequest(final HttpClientHandler handler,
+	        final HttpRequest req, final FutureCallback cb)
 	{
 		handler.setCallback(cb);
 		handler.setRequest(req);
@@ -245,11 +246,11 @@ public class HttpClient
 				{
 					future.getChannel().write(req);
 				}
-
+				
 			}
 		});
 	}
-
+	
 	public HttpClientHandler execute(final HttpRequest req,
 	        final FutureCallback cb) throws HttpClientException
 	{
@@ -295,7 +296,7 @@ public class HttpClient
 		{
 			reuse = true;
 		}
-
+		
 		String pa = adjustProxyRequest(proxy, req);
 		if (null != proxy && req.getUri().startsWith("https://")
 		        && !req.getMethod().equals(HttpMethod.CONNECT) && !reuse)
@@ -334,7 +335,7 @@ public class HttpClient
 					}
 					doRequest(tmp, req, cb);
 				}
-
+				
 				public void onError(String error)
 				{
 					cb.onError(error);
@@ -352,7 +353,7 @@ public class HttpClient
 					else
 					{
 						future.getChannel().write(connReq);
-
+						
 					}
 				}
 			});

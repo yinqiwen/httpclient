@@ -57,6 +57,8 @@ public class HttpClientHandler extends SimpleChannelUpstreamHandler
 		{
 			keepalive = false;
 		}
+		answered = false;
+		readingChunks = false;
 	}
 
 
