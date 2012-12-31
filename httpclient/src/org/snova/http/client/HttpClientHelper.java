@@ -3,6 +3,8 @@
  */
 package org.snova.http.client;
 
+import java.util.Arrays;
+
 import org.snova.http.client.common.SimpleSocketAddress;
 
 
@@ -16,6 +18,7 @@ public class HttpClientHelper
 	        String hostport)
 	{
 		String[] ss = hostport.split(":");
+		
 		if (ss.length == 1)
 		{
 			if (isHttps)

@@ -3,9 +3,10 @@
  */
 package org.snova.http.client;
 
-import io.netty.handler.codec.http.HttpRequest;
 
 import java.net.URL;
+
+import org.jboss.netty.handler.codec.http.HttpRequest;
 
 /**
  * @author qiyingwang

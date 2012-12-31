@@ -3,21 +3,24 @@
  */
 package org.snova.http.client;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundMessageHandlerAdapter;
-import io.netty.handler.codec.http.HttpChunk;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.handler.codec.http.HttpChunk;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+import org.jboss.netty.handler.codec.http.HttpMethod;
+import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.jboss.netty.handler.codec.http.HttpResponse;
 
 /**
  * @author qiyingwang
  * 
  */
-public class HttpClientHandler extends
-        ChannelInboundMessageHandlerAdapter<Object>
+public class HttpClientHandler extends SimpleChannelUpstreamHandler
 {
 	private HttpClient client;
 	private FutureCallback callback;
@@ -50,15 +53,12 @@ public class HttpClientHandler extends
 	void setRequest(HttpRequest request)
 	{
 		keepalive = HttpHeaders.isKeepAlive(request);
-	}
-
-	public void removeHttpCodec()
-	{
-		if (null != channelFuture)
+		if(request.getMethod().equals(HttpMethod.CONNECT))
 		{
-			channelFuture.channel().pipeline().remove("codec");
+			keepalive = false;
 		}
 	}
+
 
 	public boolean writeBody(final HttpChunk chunk)
 	{
@@ -68,13 +68,14 @@ public class HttpClientHandler extends
 		}
 		channelFuture.addListener(new ChannelFutureListener()
 		{
+
 			@Override
 			public void operationComplete(ChannelFuture future)
 			        throws Exception
 			{
 				if (future.isDone())
 				{
-					channelFuture = channelFuture.channel().write(chunk);
+					channelFuture = channelFuture.getChannel().write(chunk);
 				}
 			}
 		});
@@ -85,20 +86,21 @@ public class HttpClientHandler extends
 	{
 		if (null != channelFuture)
 		{
-			channelFuture.channel().close();
+			channelFuture.getChannel().close();
 			channelFuture = null;
 		}
 		inPool = false;
 	}
 
 	@Override
-	public void messageReceived(ChannelHandlerContext ctx, Object msg)
+	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 	        throws Exception
 	{
 		boolean resComplete = false;
 		answered = true;
 		FutureCallback cacheCB = this.callback;
 		HttpResponse cacheRes = clientResponse;
+		Object msg = e.getMessage();
 		if (!readingChunks)
 		{
 			HttpResponse response = (HttpResponse) msg;
@@ -108,7 +110,7 @@ public class HttpClientHandler extends
 			{
 				keepalive = HttpHeaders.isKeepAlive(response);
 			}
-			if (response.getTransferEncoding().isMultiple())
+			if (response.isChunked())
 			{
 				readingChunks = true;
 			}
@@ -148,25 +150,24 @@ public class HttpClientHandler extends
 	}
 
 	@Override
-	public void channelInactive(ChannelHandlerContext ctx) throws Exception
+	public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
+	        throws Exception
 	{
-		super.channelInactive(ctx);
 		if (inPool)
 		{
 			client.removeIdleConnection(remote, this);
 		}
-		if(readingChunks || !answered)
+		if (readingChunks || !answered)
 		{
 			callback.onError("Body not finished.");
-			//callback.onResponseComplete();
 		}
 	}
 
 	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
 	        throws Exception
 	{
-		ctx.close();
+		ctx.getChannel().close();
 	}
 
 }

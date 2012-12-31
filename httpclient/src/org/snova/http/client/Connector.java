@@ -3,7 +3,7 @@
  */
 package org.snova.http.client;
 
-import io.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFuture;
 
 /**
  * @author qiyingwang

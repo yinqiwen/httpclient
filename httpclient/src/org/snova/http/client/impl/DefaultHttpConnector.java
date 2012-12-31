@@ -3,12 +3,10 @@
  */
 package org.snova.http.client.impl;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.HttpClientCodec;
+import java.net.InetSocketAddress;
 
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.channel.ChannelFuture;
 import org.snova.http.client.Connector;
 
 /**
@@ -17,20 +15,17 @@ import org.snova.http.client.Connector;
  */
 public class DefaultHttpConnector implements Connector
 {
-	private EventLoopGroup	loop;
-	
-	public DefaultHttpConnector(EventLoopGroup loop)
+	private ClientBootstrap bootstrap;
+
+	public DefaultHttpConnector(ClientBootstrap boot)
 	{
-		this.loop = loop;
+		this.bootstrap = boot;
 	}
-	
+
 	@Override
 	public ChannelFuture connect(String host, int port)
 	{
-		Bootstrap b = new Bootstrap();
-		b.group(loop).channel(NioSocketChannel.class).remoteAddress(host, port)
-		        .handler(new HttpClientCodec());
-		return b.connect();
+		return bootstrap.connect(new InetSocketAddress(host, port));
 	}
-	
+
 }
