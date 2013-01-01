@@ -23,6 +23,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
+import org.jboss.netty.channel.DefaultChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.handler.codec.base64.Base64;
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
@@ -125,17 +126,20 @@ public class HttpClient
 		synchronized (idleConns)
 		{
 			LinkedList<HttpClientHandler> list = getIdleConnList(address);
-			if (!list.isEmpty())
+			while (!list.isEmpty())
 			{
-				
-				return list.removeFirst();
+				HttpClientHandler h = list.removeFirst();
+				if (h.channelFuture.getChannel().isConnected())
+				{
+					return h;
+				}
 			}
 		}
 		return null;
 	}
 	
-	private void prepareHandler(boolean sslEnable, HttpClientHandler handler)
-	        throws HttpClientException
+	private void prepareHandler(boolean sslEnable,
+	        final HttpClientHandler handler) throws HttpClientException
 	{
 		ChannelFuture future = handler.channelFuture;
 		
@@ -159,9 +163,39 @@ public class HttpClient
 			}
 			SSLEngine sslEngine = sslContext.createSSLEngine();
 			sslEngine.setUseClientMode(true);
-			SslHandler ssl = new SslHandler(sslEngine);
+			final SslHandler ssl = new SslHandler(sslEngine);
 			future.getChannel().getPipeline().addBefore("codec", "ssl", ssl);
-			handler.channelFuture = ssl.handshake();
+			handler.channelFuture = new DefaultChannelFuture(
+			        future.getChannel(), false);
+			future.addListener(new ChannelFutureListener()
+			{
+				public void operationComplete(ChannelFuture future)
+				        throws Exception
+				{
+					if (future.isSuccess())
+					{
+						ssl.handshake().addListener(new ChannelFutureListener()
+						{
+							public void operationComplete(ChannelFuture future)
+							        throws Exception
+							{
+								if (future.isSuccess())
+								{
+									handler.channelFuture.setSuccess();
+								}
+								else
+								{
+									handler.channelFuture.setFailure(future.getCause());
+								}	
+							}
+						});
+					}
+					else
+					{
+						handler.channelFuture.setFailure(future.getCause());
+					}
+				}
+			});
 		}
 		if (future.getChannel().getPipeline().get(HttpClientHandler.class) == null)
 		{
@@ -244,9 +278,11 @@ public class HttpClient
 				}
 				else
 				{
+					// SslHandler ssl = future.getChannel().getPipeline()
+					// .get(SslHandler.class);
+					// if(ssl.handshake())
 					future.getChannel().write(req);
 				}
-				
 			}
 		});
 	}
