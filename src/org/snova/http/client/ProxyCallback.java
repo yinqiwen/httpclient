@@ -9,7 +9,7 @@ import java.net.URL;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
 /**
- * @author qiyingwang
+ * @author yinqiwen
  *
  */
 public interface ProxyCallback

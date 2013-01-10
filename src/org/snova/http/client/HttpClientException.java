@@ -4,7 +4,7 @@
 package org.snova.http.client;
 
 /**
- * @author qiyingwang
+ * @author yinqiwen
  * 
  */
 public class HttpClientException extends Exception

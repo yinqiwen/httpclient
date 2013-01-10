@@ -3,13 +3,11 @@
  */
 package org.snova.http.client;
 
-import java.util.Arrays;
-
 import org.snova.http.client.common.SimpleSocketAddress;
 
 
 /**
- * @author qiyingwang
+ * @author yinqiwen
  * 
  */
 public class HttpClientHelper

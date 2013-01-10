@@ -3,8 +3,6 @@
  */
 package org.snova.http.client;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -12,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.net.ssl.SSLContext;
@@ -27,29 +24,22 @@ import org.jboss.netty.channel.DefaultChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.handler.codec.base64.Base64;
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
-import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpClientCodec;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
-import org.jboss.netty.handler.codec.http.HttpMessageDecoder;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
-import org.jboss.netty.handler.codec.http.HttpResponseDecoder;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.jboss.netty.handler.ssl.SslHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.snova.http.client.common.SimpleSocketAddress;
 import org.snova.http.client.impl.DefaultHttpConnector;
 
 /**
- * @author qiyingwang
+ * @author yinqiwen
  * 
  */
 public class HttpClient
 {
-	private static Logger	                           logger	  = LoggerFactory
-	                                                                      .getLogger(HttpClient.class);
 	
 	private ClientBootstrap	                           bootstrap;
 	private Map<String, LinkedList<HttpClientHandler>>	idleConns	= new HashMap<String, LinkedList<HttpClientHandler>>();

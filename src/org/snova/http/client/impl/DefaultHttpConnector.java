@@ -10,7 +10,7 @@ import org.jboss.netty.channel.ChannelFuture;
 import org.snova.http.client.Connector;
 
 /**
- * @author qiyingwang
+ * @author yinqiwen
  * 
  */
 public class DefaultHttpConnector implements Connector

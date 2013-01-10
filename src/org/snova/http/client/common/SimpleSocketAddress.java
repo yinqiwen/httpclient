@@ -4,7 +4,7 @@
  *
  * Description: SimpleSocketAddress.java 
  *
- * @author wqy [ 2010-8-12 | 07:43:13 PM ]
+ * @author yinqiwen [ 2010-8-12 | 07:43:13 PM ]
  *
  */
 package org.snova.http.client.common;

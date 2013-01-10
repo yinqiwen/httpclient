@@ -8,7 +8,7 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 
 /**
- * @author qiyingwang
+ * @author yinqiwen
  * 
  */
 public interface FutureCallback

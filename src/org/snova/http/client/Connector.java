@@ -6,7 +6,7 @@ package org.snova.http.client;
 import org.jboss.netty.channel.ChannelFuture;
 
 /**
- * @author qiyingwang
+ * @author yinqiwen
  *
  */
 public interface Connector
