@@ -29,6 +29,7 @@ public class HttpClientHandler extends SimpleChannelUpstreamHandler
 	private boolean keepalive = true;
 	private boolean readingChunks;
 	private boolean answered;
+	private HttpMethod method;
 	private HttpResponse clientResponse;
 	ChannelFuture channelFuture;
 
@@ -53,14 +54,14 @@ public class HttpClientHandler extends SimpleChannelUpstreamHandler
 	void setRequest(HttpRequest request)
 	{
 		keepalive = HttpHeaders.isKeepAlive(request);
-		if(request.getMethod().equals(HttpMethod.CONNECT))
+		method = request.getMethod();
+		if (method.equals(HttpMethod.CONNECT))
 		{
 			keepalive = false;
 		}
 		answered = false;
 		readingChunks = false;
 	}
-
 
 	public boolean writeBody(final HttpChunk chunk)
 	{
@@ -119,6 +120,10 @@ public class HttpClientHandler extends SimpleChannelUpstreamHandler
 			else
 			{
 				long length = HttpHeaders.getContentLength(response, -1);
+				if (method.equals(HttpMethod.HEAD))
+				{
+					length = 0;
+				}
 				if (length >= 0
 				        && response.getContent().readableBytes() == length)
 				{
