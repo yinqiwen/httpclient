@@ -118,11 +118,19 @@ public class HttpClient
 			LinkedList<HttpClientHandler> list = getIdleConnList(address);
 			while (!list.isEmpty())
 			{
-				HttpClientHandler h = list.removeFirst();
-				if (h.channelFuture.getChannel().isConnected())
+				try
 				{
-					return h;
+					HttpClientHandler h = list.removeFirst();
+					if (h.channelFuture.getChannel().isConnected())
+					{
+						return h;
+					}
 				}
+				catch (Exception e)
+				{
+					// TODO: handle exception
+				}
+				
 			}
 		}
 		return null;
@@ -153,8 +161,14 @@ public class HttpClient
 			}
 			SSLEngine sslEngine = sslContext.createSSLEngine();
 			sslEngine.setUseClientMode(true);
-			final SslHandler ssl = new SslHandler(sslEngine);
+		    SslHandler ssl = new SslHandler(sslEngine);
 			future.getChannel().getPipeline().addBefore("codec", "ssl", ssl);
+			
+		}
+		final SslHandler ssl = future.getChannel().getPipeline()
+                .get(SslHandler.class);
+		if (null != ssl)
+		{
 			handler.channelFuture = new DefaultChannelFuture(
 			        future.getChannel(), false);
 			future.addListener(new ChannelFutureListener()
@@ -175,8 +189,9 @@ public class HttpClient
 								}
 								else
 								{
-									handler.channelFuture.setFailure(future.getCause());
-								}	
+									handler.channelFuture.setFailure(future
+									        .getCause());
+								}
 							}
 						});
 					}
@@ -255,7 +270,6 @@ public class HttpClient
 	        final HttpRequest req, final FutureCallback cb)
 	{
 		handler.setCallback(cb);
-		handler.setRequest(req);
 		handler.channelFuture.addListener(new ChannelFutureListener()
 		{
 			@Override
@@ -268,9 +282,7 @@ public class HttpClient
 				}
 				else
 				{
-					// SslHandler ssl = future.getChannel().getPipeline()
-					// .get(SslHandler.class);
-					// if(ssl.handshake())
+					handler.setRequest(req);
 					future.getChannel().write(req);
 				}
 			}
@@ -312,7 +324,7 @@ public class HttpClient
 		if (null == handler)
 		{
 			handler = new HttpClientHandler(this, cacheConnKey);
-			handler.setRequest(req);
+			//handler.setRequest(req);
 			ChannelFuture f = options.connector.connect(address.host,
 			        address.port);
 			handler.setChannelFuture(f);
@@ -378,8 +390,7 @@ public class HttpClient
 					}
 					else
 					{
-						future.getChannel().write(connReq);
-						
+						future.getChannel().write(connReq);	
 					}
 				}
 			});
